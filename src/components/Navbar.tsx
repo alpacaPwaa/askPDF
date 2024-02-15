@@ -8,6 +8,7 @@ import Link from "next/link";
 import MaxWidthWrapper from "./MaxWidthWrapper";
 import { buttonVariants } from "./ui/button";
 import UserAccountNav from "./UserAccountNav";
+import MobileNav from "./MobileNav";
 
 async function NavBar() {
   const { getUser } = getKindeServerSession();
@@ -20,6 +21,8 @@ async function NavBar() {
           <Link href="/" className="flex z-40 font-semibold">
             <span>AskPDF</span>
           </Link>
+
+          <MobileNav isAuth={!!user} />
 
           <div className="hidden items-center space-x-4 sm:flex">
             {!user ? (
