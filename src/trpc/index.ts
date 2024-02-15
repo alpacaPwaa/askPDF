@@ -4,6 +4,9 @@ import { TRPCError } from "@trpc/server";
 import { db } from "@/db";
 import { z } from "zod";
 import { INFINITE_QUERY_LIMIT } from "@/config/infinite-query";
+import { absoluteUrl } from "@/lib/utils";
+import { getUserSubscriptionPlan, stripe } from "@/lib/stripe";
+import { PLANS } from "@/config/stripe";
 
 export const appRouter = router({
   authCallback: publicProcedure.query(async () => {
@@ -39,6 +42,56 @@ export const appRouter = router({
         userId,
       },
     });
+  }),
+
+  createStripeSession: privateProcedure.mutation(async ({ ctx }) => {
+    const { userId } = ctx;
+
+    const billingUrl = absoluteUrl("/dashboard/billing");
+
+    if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+    // Retrieve the user from the database
+    const dbUser = await db.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!dbUser) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+    // Get the user's subscription plan
+    const subscriptionPlan = await getUserSubscriptionPlan();
+
+    if (subscriptionPlan.isSubscribed && dbUser.stripeCustomerId) {
+      // Create a billing portal session if the user is already subscribed and has a Stripe customer ID
+      const stripeSession = await stripe.billingPortal.sessions.create({
+        customer: dbUser.stripeCustomerId,
+        return_url: billingUrl,
+      });
+
+      return { url: stripeSession.url };
+    }
+
+    // Create a checkout session for the user to subscribe to the "Pro" plan
+    const stripeSession = await stripe.checkout.sessions.create({
+      success_url: billingUrl,
+      cancel_url: billingUrl,
+      payment_method_types: ["card"], // Don't think PayPal is an option for Canada Testing
+      mode: "subscription",
+      billing_address_collection: "auto",
+      line_items: [
+        {
+          price: PLANS.find((plan) => plan.name === "Pro")?.price.priceIds.test, // Will need to swap to production
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        userId: userId,
+      },
+    });
+
+    return { url: stripeSession.url };
   }),
 
   getFileMessages: privateProcedure
