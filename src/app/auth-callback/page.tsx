@@ -9,25 +9,27 @@ function Page() {
   const router = useRouter();
 
   useEffect(() => {
-    // Use useEffect here
-    const searchParams = new URLSearchParams(router.asPath);
-    const origin = searchParams.get("origin");
+    // Ensure we're on the client side before using the router
+    if (router.asPath) {
+      const searchParams = new URLSearchParams(router.asPath);
+      const origin = searchParams.get("origin");
 
-    trpc.authCallback.useQuery(undefined, {
-      onSuccess: ({ success }) => {
-        if (success) {
-          router.push(origin ? `${origin}` : "/dashboard");
-        }
-      },
-      onError: (err) => {
-        if (err.data?.code === "UNAUTHORIZED") {
-          router.push("/sign-in");
-        }
-      },
-      // retry: true,
-      // retryDelay: 500
-    });
-  }, []);
+      trpc.authCallback.useQuery(undefined, {
+        onSuccess: ({ success }) => {
+          if (success) {
+            router.push(origin ? `${origin}` : "/dashboard");
+          }
+        },
+        onError: (err) => {
+          if (err.data?.code === "UNAUTHORIZED") {
+            router.push("/sign-in");
+          }
+        },
+        // retry: true,
+        // retryDelay: 500
+      });
+    }
+  }, [router.asPath]); // Ensure useEffect runs only when `router.asPath` changes
 
   return (
     <Suspense fallback={<Loader2 />}>
