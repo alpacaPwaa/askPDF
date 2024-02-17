@@ -28,7 +28,7 @@ export const ChatContextProvider = ({ fileId, children }: Props) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // useContext() became useUtils()
-  const utils = trpc.useContext();
+  const utils = trpc.useUtils();
 
   const { toast } = useToast();
 

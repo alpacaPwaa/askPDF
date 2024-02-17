@@ -78,7 +78,7 @@ const onUploadComplete = async ({
     }
 
     const pineconeIndex = pinecone.Index("askpdf");
-    const embeddings = await new OpenAIEmbeddings({
+    const embeddings = new OpenAIEmbeddings({
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
 
