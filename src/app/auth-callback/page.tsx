@@ -1,49 +1,42 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { trpc } from "../_trpc/client";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/router"; // Import useRouter from next/router
+import { useEffect } from "react";
 
-function Page() {
+const Page = () => {
   const router = useRouter();
 
-  useEffect(() => {
-    // Ensure we're on the client side before using the router
-    if (router.asPath) {
-      // Dynamic import trpc module to prevent SSR/SSG
-      import("@/app/_trpc/client").then(({ trpc }) => {
-        const searchParams = new URLSearchParams(router.asPath);
-        const origin = searchParams.get("origin");
+  const searchParams = useSearchParams();
+  const origin = searchParams.get("origin");
 
-        trpc.authCallback.useQuery(undefined, {
-          onSuccess: ({ success }) => {
-            if (success) {
-              router.push(origin ? `${origin}` : "/dashboard");
-            }
-          },
-          onError: (err) => {
-            if (err.data?.code === "UNAUTHORIZED") {
-              router.push("/sign-in");
-            }
-          },
-          // retry: true,
-          // retryDelay: 500
-        });
-      });
+  const { data, error, isLoading } = trpc.authCallback.useQuery(undefined, {
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (data?.success) {
+      router.push(origin ? `/${origin}` : `/dashboard`);
     }
-  }, [router.asPath]); // Ensure useEffect runs only when `router.asPath` changes
+  }, [data, origin, router]);
+
+  useEffect(() => {
+    if (error && error.data?.code === "UNAUTHORIZED") {
+      console.log("Redirecting to sign-in due to UNAUTHORIZED error");
+      router.push("/sign-in");
+    }
+  }, [error, router]);
 
   return (
-    <Suspense fallback={<Loader2 />}>
-      <div className="w-full mt-24 flex justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
-          <h3 className="font-semibold text-xl">Setting up your account...</h3>
-          <p className="text-sm text-zinc-500">You will be redirected soon</p>
-        </div>
+    <div className="w-full mt-24 flex justify-center">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-800" />
+        <h3 className="font-semibold text-xl">Setting up your account...</h3>
+        <p className="text-sm text-zinc-500">You will be redirected soon</p>
       </div>
-    </Suspense>
+    </div>
   );
-}
+};
 
 export default Page;
