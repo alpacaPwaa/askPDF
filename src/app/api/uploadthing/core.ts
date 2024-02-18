@@ -53,7 +53,7 @@ const onUploadComplete = async ({
       key: file.key,
       name: file.name,
       userId: metadata.userId,
-      url: `https://utfs.io/f/${file.key}`,
+      url: file.url,
       uploadStatus: "PROCESSING",
     },
   });
