@@ -8,7 +8,14 @@ import { pinecone } from "@/lib/pinecone";
 import { getUserSubscriptionPlan } from "@/lib/stripe";
 import { PLANS } from "@/config/stripe";
 
-const f = createUploadthing();
+const f = createUploadthing({
+  errorFormatter: (err) => {
+    console.log("Error uploading file", err.message);
+    console.log("  - Above error caused by:", err.cause);
+
+    return { message: err.message };
+  },
+});
 
 const middleware = async () => {
   const { getUser } = getKindeServerSession();
