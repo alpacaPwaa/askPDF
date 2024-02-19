@@ -38,7 +38,7 @@ Welcome to AskPDF, a cutting edge SaaS product transforming user interactions wi
 
 - [Zod](https://zod.dev/): A TypeScript-first schema declaration and validation library.
 
-- [PlanetScale](https://planetscale.com/): Utilized for secure storage of user profiles.
+- [Neo](https://neon.tech/): Utilized for secure storage of user profiles.
 
 - [KindeAuth](https://kinde.com/): Ensures secure user authentication.
 
